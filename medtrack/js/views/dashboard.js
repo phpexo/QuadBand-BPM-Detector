@@ -4,6 +4,7 @@ import { doseEvents, pastEvents, nextScheduled, bodyMetrics } from '../model.js'
 import { simulate, amountAt, concentration, MS_PER_DAY } from '../pk/engine.js';
 import { buildAdvice, activeCompounds, weeklyLoad } from '../safety/advice.js';
 import { MARKER_BY_ID } from '../safety/labs.js';
+import { dueItems } from '../reminders.js';
 
 const LEVEL_LABEL = { emergency: 'Notfall', urgent: 'Dringend', warn: 'Achtung', info: 'Hinweis', ok: 'In Ordnung' };
 
@@ -85,6 +86,21 @@ export function render(ctx) {
   } else {
     root.appendChild(card('Status', el('p', { class: 'muted' },
       'Keine offenen Warnhinweise. Werte trotzdem regelmaessig eintragen - Trends sind aussagekraeftiger als Einzelwerte.')));
+  }
+
+  // ---------------------------------------------------------------- Anstehend
+  const upcoming = dueItems(state, now, 10);
+  if (upcoming.length) {
+    root.appendChild(card('Anstehend',
+      el('ul', { class: 'due-list' }, upcoming.slice(0, 6).map((item) => {
+        const t = Date.parse(item.at);
+        const overdue = t <= now;
+        return el('li', { class: `due-item${overdue ? ' overdue' : ''}` },
+          el('span', { class: 'due-when' }, overdue ? 'faellig' : fmt.relDays((t - now) / MS_PER_DAY)),
+          el('span', { class: 'due-title' }, item.title),
+          el('span', { class: 'due-date muted' }, fmt.dateTime(item.at)));
+      })),
+      el('a', { class: 'link', href: '#/einstellungen' }, 'Erinnerungen und Kalender-Export einrichten')));
   }
 
   // ---------------------------------------------------------------- Kurve

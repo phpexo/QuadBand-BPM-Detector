@@ -32,9 +32,24 @@ ohne Estradiol-Messung, orale 17-α-alkylierte Substanzen, 19-Nor-Substanzen, Do
 oberhalb des Substitutionsbereichs, fehlende Rotation der Injektionsstellen, fehlender
 Arztkontakt. Dazu eine feste Liste von Warnzeichen, bei denen sofort Hilfe nötig ist.
 
-**Körper & Training.** Gewicht, Körperfett (auch als Navy-Schätzung), Umfänge, FFMI,
-Blutdruck, Ruhepuls, Befinden und Nebenwirkungen; Trainingslogbuch mit Sätzen,
-geschätztem 1RM (Epley), Wochenvolumen und Kraftentwicklung.
+**Training.** 77 Übungen mit Muskelgruppen, Gerät und Erfassungsart (Gewicht × Wdh.,
+Körpergewicht, Zusatzgewicht, Dauer, Ausdauer) – dazu beliebig viele eigene. Laufende
+Trainingseinheit mit Vorbelegung aus der letzten Einheit, Aufwärmsätzen, RPE,
+Satzpausen-Timer, Scheibenrechner und automatischer Rekord-Erkennung. Trainingspläne
+als Vorlage. Auswertung: Sätze je Muskelgruppe (sekundär beteiligte zählen zur Hälfte),
+Trainingsfrequenz, Wochenvolumen, Kraftentwicklung je Übung und Bestleistungen.
+
+**Körper.** Gewicht mit gleitendem Schnitt und Veränderungsrate pro Woche, Körperfett
+(eingetragen, per Caliper nach Jackson-Pollock mit 3 oder 7 Messstellen, oder aus
+Umfängen nach der US-Navy-Formel), 13 Umfänge inklusive Seitenvergleich, FFMI mit
+Einordnung, Taille-zu-Größe-Verhältnis, Blutdruck, Ruhepuls, Schlaf, Schritte,
+Kalorien, Eiweiß, Befinden und Nebenwirkungen. Fortschrittsfotos liegen verkleinert
+in der lokalen Datenbank des Browsers.
+
+**Erinnerungen.** Injektionen, Blutkontrolle, Arzttermine und Blutdruckmessung.
+Benachrichtigungen erscheinen, solange die App offen ist, und werden beim nächsten
+Öffnen nachgemeldet. Verlässlich erinnert der Kalender-Export (.ics mit Voralarm) –
+der funktioniert unabhängig davon, ob die App läuft.
 
 **Arztbericht.** Ein Klick erzeugt eine Textdatei mit Medikation, Gaben der letzten
 90 Tage, Laborwerten, beobachteten Nebenwirkungen und offenen Hinweisen – zum Ausdrucken
@@ -53,10 +68,13 @@ Dann `http://localhost:8080/` öffnen. Über `file://` funktioniert sie nicht, w
 Browser ES-Module von dort blockieren.
 
 Auf dem Handy lässt sie sich über „Zum Startbildschirm hinzufügen" als PWA installieren
-und funktioniert danach offline (Service Worker).
+und funktioniert danach offline (Service Worker). Das Layout ist auf Handybedienung
+ausgelegt: Navigation am unteren Rand in Daumenreichweite, Zahleneingaben mit Plus- und
+Minus-Tasten, Eingabefelder mit 16 px (sonst zoomt iOS beim Antippen hinein), und
+Tabellen werden auf schmalen Bildschirmen zu Karten.
 
 ```bash
-npm test     # 27 Tests für PK-Engine und Regel-Engine
+npm test     # 59 Tests für PK-, Regel-, Trainings- und Körper-Logik
 ```
 
 ## Datenschutz
@@ -116,9 +134,14 @@ medtrack/
 │   ├── safety/
 │   │   ├── labs.js         34 Labormarker mit Referenzbereichen
 │   │   └── advice.js       Regel-Engine für Hinweise und Warnzeichen
+│   ├── data/exercises.js   77 Übungen mit Muskelgruppen und Gerät
+│   ├── gym/stats.js        1RM, Rekorde, Sätze je Muskel, Scheibenrechner
+│   ├── body/metrics.js     Körperfett-Formeln, FFMI, Umfänge, Trends
+│   ├── reminders.js        Fälligkeiten, Benachrichtigungen, .ics-Export
+│   ├── photos.js           Fortschrittsfotos in IndexedDB
 │   ├── ui/                 DOM-Helfer und SVG-Diagramme (ohne Framework)
-│   └── views/              9 Ansichten
-└── test/                   Tests für PK- und Regel-Engine
+│   └── views/              9 Ansichten, Training und Körper mit Unterreitern
+└── test/                   Tests für PK-, Regel-, Trainings- und Körper-Logik
 ```
 
 Kein Framework, keine Abhängigkeiten, kein Bundler. Node wird nur für die Tests gebraucht.
@@ -135,10 +158,30 @@ Kein Framework, keine Abhängigkeiten, kein Bundler. Node wird nur für die Test
   und ein offenes Gespräch mit einem Arzt sind durch nichts zu ersetzen; die ärztliche
   Schweigepflicht gilt auch hier.
 
+## Offen erweiterbar
+
+Nichts an der App ist eine feste Liste:
+
+- **Eigene Substanzen** mit Esterfaktor und Halbwertszeiten (Einstellungen)
+- **Eigene Übungen** mit Muskelgruppen und Erfassungsart – sie zählen in Auswertung
+  und Rekorden gleichwertig mit (Training → Übungen)
+- **Eigene Trainingspläne** als Vorlage für die Einheit
+- **Export und Import** als JSON und CSV, dazu der Kalender-Export
+
+Die Datenbanken liegen als lesbare JavaScript-Dateien vor (`js/pk/compounds.js`,
+`js/data/exercises.js`, `js/safety/labs.js`) und lassen sich direkt ergänzen.
+
+## Datenmigration
+
+Der Speicher trägt eine Schemaversion. Beim Start wird migriert und das Ergebnis sofort
+zurückgeschrieben. Version 1 → 2 überführt die früher als Freitext gespeicherten Übungen
+auf Übungs-IDs; Umlautvarianten werden zusammengeführt, unbekannte Namen bleiben als
+eigene Übung erhalten statt stillschweigend einer ähnlichen zugeordnet zu werden.
+
 ## Mögliche nächste Schritte
 
-- Erinnerungen per Notification API (Injektion fällig, Blutkontrolle fällig)
 - Verknüpfung von Nebenwirkungs-Einträgen mit dem berechneten Spiegel zum Zeitpunkt
 - Import von Laborbefunden aus PDF
 - Verschlüsselte Sicherung statt Klartext-JSON
+- Vergleichsansicht für Fortschrittsfotos (nebeneinander, gleiche Pose)
 - Weitere Basis-Hormone mit belastbarem Vd, sobald Daten vorliegen

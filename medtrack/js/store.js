@@ -4,32 +4,48 @@
  * Das ist bei Gesundheitsdaten dieser Art eine bewusste Entscheidung.
  */
 
+import { EXERCISES } from './data/exercises.js';
+
 const KEY = 'medtrack.state.v1';
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 export const DEFAULT_STATE = {
   version: SCHEMA_VERSION,
   settings: {
     weightKg: 85,
     heightCm: 180,
+    sex: 'm',
+    age: 30,
     tUnit: 'ng/dl',
     labIntervalDays: 180,
+    bpIntervalDays: 7,
     calibration: 1,
     disclaimerAcceptedAt: null,
     curveWindowPast: 30,
     curveWindowFuture: 30,
+    e1rmFormula: 'epley',
+    barKg: 20,
+    plates: [25, 20, 15, 10, 5, 2.5, 1.25],
+    restSeconds: 120,
+    reminders: { injection: true, lab: true, doctor: true, bloodpressure: false },
+    notified: {},
   },
   protocols: [],
   injections: [],
   panels: [],
   bodyLog: [],
   workouts: [],
+  routines: [],
+  activeSession: null,
   doctorVisits: [],
   customCompounds: [],
+  customExercises: [],
 };
 
 const listeners = new Set();
+let needsPersistAfterLoad = false;
 let state = load();
+if (needsPersistAfterLoad) persist();
 
 function load() {
   try {
@@ -45,8 +61,51 @@ function load() {
 }
 
 function migrate(s) {
+  const from = s.version || 1;
+  if (from < 2) migrateWorkoutsToExerciseIds(s);
   s.version = SCHEMA_VERSION;
+  // Ergebnis sofort zurueckschreiben, sonst laeuft die Migration bei jedem
+  // Start erneut und der Speicher bleibt auf dem alten Stand.
+  if (from !== SCHEMA_VERSION) needsPersistAfterLoad = true;
   return s;
+}
+
+/**
+ * Version 1 speicherte Uebungen als freien Text. Ab Version 2 verweisen Saetze
+ * auf eine Uebungs-ID, damit Muskelgruppen, Rekorde und Verlauf zusammenpassen.
+ * Unbekannte Namen werden als eigene Uebung uebernommen, damit nichts verloren geht.
+ */
+function migrateWorkoutsToExerciseIds(s) {
+  // Umlaute vereinheitlichen, damit "Bankdruecken" und "Bankdrücken" denselben
+  // Schluessel ergeben. Nur exakte Treffer werden zugeordnet - eine Uebung wie
+  // "Beinpresse Sondergeraet" soll nicht stillschweigend mit "Beinpresse"
+  // verschmelzen, sonst wird der Verlauf verfaelscht.
+  const norm = (v) => String(v || '')
+    .toLowerCase()
+    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9]/g, '');
+  const byName = new Map();
+  for (const ex of EXERCISES) byName.set(norm(ex.name), ex.id);
+  s.customExercises = s.customExercises || [];
+
+  for (const w of s.workouts || []) {
+    for (const set of w.sets || []) {
+      if (set.exerciseId || !set.exercise) continue;
+      const key = norm(set.exercise);
+      let id = byName.get(key);
+      if (!id) {
+        id = `custom-ex-${key || uid()}`;
+        if (!s.customExercises.some((e) => e.id === id)) {
+          s.customExercises.push({
+            id, name: set.exercise, equipment: 'other',
+            primary: [], secondary: [], type: 'weight_reps', custom: true,
+          });
+        }
+        byName.set(key, id);
+      }
+      set.exerciseId = id;
+    }
+  }
 }
 
 function persist() {
@@ -77,7 +136,9 @@ export function update(mutator) {
   return state;
 }
 
-export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+export function uid() {
+  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+}
 
 export function addItem(collection, item) {
   return update((s) => {

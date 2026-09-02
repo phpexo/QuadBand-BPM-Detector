@@ -96,3 +96,43 @@ export function table(headers, rows) {
 export function confirmDelete(text = 'Eintrag wirklich loeschen?') {
   return window.confirm(text);
 }
+
+/** Einfache Reiter-Navigation innerhalb einer Ansicht. */
+export function tabs(items, current, onchange) {
+  return el('div', { class: 'tabs', role: 'tablist' }, items.map((t) =>
+    el('button', {
+      class: `tab${t.id === current ? ' active' : ''}`,
+      role: 'tab', type: 'button',
+      onclick: () => onchange(t.id),
+    }, t.label, t.badge != null ? el('span', { class: 'tab-badge' }, String(t.badge)) : null)));
+}
+
+/** Zahleneingabe mit Plus/Minus - auf dem Handy deutlich schneller als Tippen. */
+export function stepper(value, { step = 1, min = 0, max = Infinity, onchange, suffix = '' } = {}) {
+  const input = el('input', {
+    type: 'number', value, step, min, inputmode: 'decimal',
+    oninput: (e) => onchange(e.target.value === '' ? '' : Number(e.target.value)),
+  });
+  const bump = (delta) => {
+    const next = Math.min(max, Math.max(min, (Number(input.value) || 0) + delta));
+    input.value = Number(next.toFixed(3));
+    onchange(Number(input.value));
+  };
+  return el('div', { class: 'stepper' },
+    el('button', { class: 'step-btn', type: 'button', 'aria-label': 'weniger', onclick: () => bump(-step) }, '−'),
+    input,
+    suffix ? el('span', { class: 'step-suffix' }, suffix) : null,
+    el('button', { class: 'step-btn', type: 'button', 'aria-label': 'mehr', onclick: () => bump(step) }, '+'));
+}
+
+/** Tabelle, die auf schmalen Bildschirmen zu Karten wird. */
+export function responsiveTable(headers, rows) {
+  const wrap = table(headers, rows);
+  // Die Klasse gehoert an die Tabelle selbst, nicht an den Scroll-Container:
+  // erst dann greift auf schmalen Bildschirmen das Kartenlayout.
+  wrap.querySelector('table')?.classList.add('responsive');
+  for (const tr of wrap.querySelectorAll('tbody tr')) {
+    [...tr.children].forEach((td, i) => { td.dataset.label = headers[i] || ''; });
+  }
+  return wrap;
+}

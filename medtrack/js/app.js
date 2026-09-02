@@ -1,5 +1,6 @@
 import { el, clear } from './ui/dom.js';
-import { getState, subscribe, setSetting } from './store.js';
+import { getState, subscribe, setSetting, update } from './store.js';
+import { notifyDue, scheduleWhileOpen } from './reminders.js';
 import * as dashboard from './views/dashboard.js';
 import * as meds from './views/meds.js';
 import * as curve from './views/curve.js';
@@ -84,10 +85,33 @@ function disclaimerGate() {
   return false;
 }
 
+/**
+ * Erinnerungen: beim Oeffnen wird nachgemeldet, was faellig geworden ist,
+ * und fuer den Rest des Tages werden Timer gesetzt, solange die App laeuft.
+ */
+let cancelTimers = null;
+function armReminders() {
+  const state = getState();
+  if (!state.settings.disclaimerAcceptedAt) return;
+  notifyDue(state, (entries) => {
+    update((s) => { s.settings.notified = { ...(s.settings.notified || {}), ...entries }; });
+  }).catch(() => { /* Benachrichtigungen sind optional */ });
+
+  cancelTimers?.();
+  cancelTimers = scheduleWhileOpen(state, () => {
+    notifyDue(getState(), (entries) => {
+      update((s) => { s.settings.notified = { ...(s.settings.notified || {}), ...entries }; });
+    }).catch(() => {});
+  });
+}
+
 window.addEventListener('hashchange', render);
 subscribe(() => renderNav());
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') armReminders();
+});
 
-if (disclaimerGate()) render();
+if (disclaimerGate()) { render(); armReminders(); }
 else renderNav();
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
