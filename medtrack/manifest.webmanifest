@@ -1,0 +1,19 @@
+{
+  "name": "MedTrack - Medikation, Labor, Koerper, Training",
+  "short_name": "MedTrack",
+  "description": "Lokaler Tracker fuer Hormontherapie und Training mit Halbwertszeit- und Wirkstoffkurven.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

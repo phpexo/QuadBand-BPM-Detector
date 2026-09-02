@@ -26,3 +26,20 @@ pip install --upgrade pip
 pip install numpy scipy sounddevice PyQt5 pyqtgraph mido python-rtmidi
 
 Weil die Daslight 5 erkennung zu schlecht ist 
+
+---
+
+## Weiteres Projekt in diesem Repository
+
+### [`medtrack/`](medtrack/) – Medikations-, Körper- und Trainingstracker
+
+Lokale Web-App (PWA, ohne Build-Schritt) zur Dokumentation einer Hormontherapie:
+berechnete Wirkstoff- und Halbwertszeitkurven auf Basis eines Bateman-Modells,
+Laborwerte mit Referenzbereichen und Verlauf, Körper- und Trainingstracking sowie
+eine Regel-Engine für Sicherheitshinweise und Arzt-/Blutkontroll-Erinnerungen.
+Alle Daten bleiben im Browser. Details in [`medtrack/README.md`](medtrack/README.md).
+
+```bash
+cd medtrack && python3 -m http.server 8080   # dann http://localhost:8080/
+cd medtrack && npm test                      # Tests der PK- und Regel-Engine
+```

@@ -1,0 +1,11 @@
+{
+  "name": "medtrack",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Lokaler Tracker fuer Medikation (TRT/AAS), Blutwerte, Koerperdaten und Training",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "serve": "python3 -m http.server 8080"
+  }
+}

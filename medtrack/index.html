@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>MedTrack</title>
+  <meta name="description" content="Lokaler Tracker fuer Medikation, Blutwerte, Koerperdaten und Training - mit Halbwertszeit- und Wirkstoffkurven.">
+  <meta name="theme-color" content="#0d1117">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💊</text></svg>">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark">💊</span>
+      <div>
+        <strong>MedTrack</strong>
+        <span class="brand-sub">Medikation · Blutwerte · Koerper · Training</span>
+      </div>
+    </div>
+    <a class="emergency-link" href="#/sicherheit">⚠ Notfallzeichen</a>
+  </header>
+  <nav id="nav" class="nav"></nav>
+  <main id="main" class="main"></main>
+  <footer class="app-footer">
+    Kein Medizinprodukt · keine Dosierungsempfehlung · alle Daten bleiben auf diesem Geraet
+  </footer>
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
